@@ -13,7 +13,7 @@ set -e
 DOMAIN=${1:?"Usage: ./setup-vps.sh <domain> <email>"}
 EMAIL=${2:?"Usage: ./setup-vps.sh <domain> <email>"}
 DEPLOY_DIR="/opt/smartbag"
-GITHUB_OWNER="nitin3150"
+GITHUB_OWNER="varinder1650"
 
 echo "==============================="
 echo "  SmartBag — VPS Setup"
