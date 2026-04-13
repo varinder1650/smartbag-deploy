@@ -1,0 +1,138 @@
+# docker-compose.yml
+# ============================================
+# SmartBag Deploy — Base service definitions
+# Images are pulled from GitHub Container Registry (GHCR)
+# Use with: docker-compose.prod.yml
+# ============================================
+
+services:
+  # --- Application Services ---
+
+  backend:
+    image: ghcr.io/nitin3150/smartbag-backend:latest
+    container_name: smartbag-backend
+    expose:
+      - "8000"
+    env_file:
+      - .env.backend
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+    networks:
+      - smartbag-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+
+  admin-backend:
+    image: ghcr.io/nitin3150/smartbag-admin-backend:latest
+    container_name: smartbag-admin-backend
+    expose:
+      - "8001"
+    env_file:
+      - .env.admin-backend
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+    networks:
+      - smartbag-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/').read()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+
+  admin-panel:
+    image: ghcr.io/nitin3150/smartbag-admin-panel:latest
+    container_name: smartbag-admin-panel
+    expose:
+      - "80"
+    networks:
+      - smartbag-net
+    restart: unless-stopped
+
+  # --- Infrastructure Services ---
+
+  mongo:
+    image: mongo:7.0
+    container_name: smartbag-mongo
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-smartbag}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - smartbag-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: smartbag-redis
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - smartbag-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: smartbag-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-smartbag}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartbag_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-smartbag_inventory}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - smartbag-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-smartbag}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    container_name: smartbag-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+      - admin-backend
+      - admin-panel
+    networks:
+      - smartbag-net
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  redis_data:
+  postgres_data:
+
+networks:
+  smartbag-net:
+    driver: bridge
