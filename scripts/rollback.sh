@@ -9,7 +9,7 @@ set -e
 
 SERVICE=${1:?"Usage: ./scripts/rollback.sh <service> <image-tag>"}
 TAG=${2:?"Usage: ./scripts/rollback.sh <service> <image-tag>"}
-OWNER="nitin3150"
+OWNER="varinder1650"
 
 cd "$(dirname "$0")/.."
 

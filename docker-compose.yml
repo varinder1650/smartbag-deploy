@@ -9,7 +9,7 @@ services:
   # --- Application Services ---
 
   backend:
-    image: ghcr.io/nitin3150/smartbag-backend:latest
+    image: ghcr.io/varinder1650/smartbag-backend:latest
     container_name: smartbag-backend
     expose:
       - "8000"
@@ -31,7 +31,7 @@ services:
       retries: 3
 
   admin-backend:
-    image: ghcr.io/nitin3150/smartbag-admin-backend:latest
+    image: ghcr.io/varinder1650/smartbag-admin-backend:latest
     container_name: smartbag-admin-backend
     expose:
       - "8001"
@@ -55,7 +55,7 @@ services:
       retries: 3
 
   admin-panel:
-    image: ghcr.io/nitin3150/smartbag-admin-panel:latest
+    image: ghcr.io/varinder1650/smartbag-admin-panel:latest
     container_name: smartbag-admin-panel
     expose:
       - "80"
